@@ -3,6 +3,8 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+**Un décodeur générique du flux Téléinfo.**
+
 ## Présentation
 Cette bibliothèque est un décodeur prêt-à-l'emploi du flux de *"Sorties de télé-information client des appareils de comptage électroniques utilisés par ERDF"*,
 généralement appelé *Téléinfo*.
@@ -80,7 +82,7 @@ Pour utiliser la bibliothèque TeleinfoDecoder dans votre projet Arduino, il vou
 Le code source suivant :
 
 * lit le flux Téléinfo sur le pin 10 de l'Arduino
-* décode le flux à l'aide du 
+* décode le flux à l'aide de cette bibliothèque
 * envoit vers le Moniteur série de l'IDE ARduino des informations de base (n° du compteur, index totale, puissance instantanée) 
 
 Les commentaires dans le code permettent de mieux le comprendre :  
