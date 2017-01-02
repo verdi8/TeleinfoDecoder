@@ -1,3 +1,5 @@
 .cproject
 .project
-/samples
+/bin/*
+/build/*
+/lib/*

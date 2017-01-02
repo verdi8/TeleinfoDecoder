@@ -1,28 +1,30 @@
+
+# TeleinfoDecoder
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-# Présentation
+## Présentation
 Cette bibliothèque est un décodeur prêt-à-l'emploi du flux de *"Sorties de télé-information client des appareils de comptage électroniques utilisés par ERDF"*,
 généralement appelé *Téléinfo*.
 
 Le décodeur prend en entrée les octets du flux Téléinfo. Lorsque la trame est complète, il met à disposition un objet de type *Teleinfo* qui contient toutes
-les caractéristiques fournies par le compteur électrique.   
+les caractéristiques fournies par le compteur électrique.
 
-# Portabilité
+### Portabilité
 Le décodeur est développé en C++/standard (structure) avec les bibliothèques standards du C (types). Il est donc portable, notamment pour les environnements Arduino ou Raspberry Pi.
-Le décodeur ne lit ni n'écrit d'entrées/sorties, de pins, de port série, de GPIO, etc. Pour ça, c'est à vous de jouer !  
+Le décodeur ne lit ni n'écrit d'entrées/sorties, de pins, de port série, de GPIO, etc. Pour ça, c'est à vous de jouer !
 
-# Robustesse
+### Robustesse
 Le décodeur est basé sur le [Design Pattern État (State)](https://fr.wikipedia.org/wiki/%C3%89tat_%28patron_de_conception%29), ce qui le rend structurellement très robuste. 
 Toute donnée non attendue le ramène à son état initial en attente du début d'une nouvelle trame Téléinfo. 
 Il est donc tolérant aux trames erronées, interruptions de trames, trames prises en cours... 
 
-# Empreinte mémoire
-Le décodeur gère sa mémoire "en bon père de famille". Une fois le décodeur initialisé (new TeleinfoDecoder()), son empreinte mémoire reste constante, aucune allocaton/désallocation n'est executée par la suite.
+### Empreinte mémoire
+Pour une intégration en système embaqrué, le décodeur gère sa mémoire "en bon père de famille" : une fois le décodeur initialisé (new TeleinfoDecoder()), son empreinte mémoire reste constante, aucune allocaton/désallocation donc aucun risque de fragmentation de mémoire.
+Attention, l'objet de type *Teleinfo* retourné par le décodeur ne doit pas être désalloué (free), il est réutilisé pour les décodages de trames suivantes.  
 
-Attention, l'objet de type Teleinfo retourné par le décodeur ne doit pas être désalloué (free), il est réutilisé pour les décodages de trames suivantes.  
-
-# Usage
-## Initailisation du décodeur
+## Usage
+## Initialisation du décodeur
 
 ## Décodage des informations de Téléinfo
 
@@ -30,10 +32,10 @@ Attention, l'objet de type Teleinfo retourné par le décodeur ne doit pas être
 
 ### Principales méthodes 
 Méthode | Description
--|-
-compteur->getAdco()|
+- | -
+teleinfo->getAdco() | Donne le numéro de série du compteur
 
-## Constantes
+### Constantes
 
 ## Autres
 Afin d'alleger le code d'intégration, le TeleinfoDecoder applique 2 filtres : 
@@ -48,11 +50,47 @@ Pour utiliser la bibliothèque TeleinfoDecoder dans votre projet Arduino, il vou
 2. Copier les fichiers TeleinfoDecoder.h et TeleinfoDecoder.cpp dans le répertoire du projet 
 3. Ré-ouvrir le projet dans l'IDE Arduino, les fichiers TeleinfoDecoder.h et TeleinfoDecoder.cpp sont ouverts dans de nouveaux onglets, le décodeur peut être utilisé depuis le fichier .ino  
 
-## Exemple de code
+## Code source
 
- 
+```C
+#include <SoftwareSerial.h>
+#include "TeleinfoDecoder.h"
 
+SoftwareSerial* teleinfoSerial;
+TeleinfoDecoder* teleinfoDecoder;
 
+void setup() {
+  pinMode(10, INPUT);
+  teleinfoSerial = new SoftwareSerial(10, 255, true); // Entrée du signal Téléinfo sur le pin 10 de l'Arduino 
+  teleinfoDecoder = new TeleinfoDecoder();
+  Serial.begin(115200); // Sortie sur le Moniteur série de l'IDE Arduino en 115200 baud
+}
+
+void loop() {
+  // Décodage du flux
+  Serial.println("Lecture du flux Téléinfo"); 
+  teleinfoSerial->begin(TELEINFO_BAUD_RATE); // Init de la lecture du flux Téléinfo. La constante TELEINFO_BAUD_RATE contient le débit du flux Téléinfo (1200 baud)
+  
+  Teleinfo* teleinfo = NULL;  // C'est dans cette variable que nous récupérerons les informations du compteur transmises par la Téléinfo
+  while(teleinfo == NULL) {
+    int character = teleinfoSerial->read();
+    teleinfo = teleinfoDecoder->decode(character);
+  }
+  
+  teleinfoSerial->end();
+  // Fin de décodage du flux
+  
+  // Traitement des informations récupérées dans l'objet Teleinfo (par exemple, ESP8266, RfxCom, afficheur, etc.)
+  // Ici : transmission au Moniteur série de l'IDE Arduino
+  Serial.print("Compteur No : "); Serial.println(teleinfo->getAdco());
+  Serial.print("Consommation totale (Wh) : "); Serial.println(teleinfo->getTotalIndex());
+  Serial.print("Puissance instantanée (W) : "); Serial.println(teleinfo->getInstPower());
+  
+  // Pause de 30 secondes avant de recommencer
+  Serial.println("Pause de 30 secondes..."); 
+  delay(30000);
+}
+```
 
 # Usage avancé
 
