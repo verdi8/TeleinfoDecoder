@@ -10,30 +10,47 @@ généralement appelé *Téléinfo*.
 Le décodeur prend en entrée les octets du flux Téléinfo. Lorsque la trame est complète, il met à disposition un objet de type *Teleinfo* qui contient toutes
 les caractéristiques fournies par le compteur électrique.
 
-### Portabilité
-Le décodeur est développé en C++/standard (structure) avec les bibliothèques standards du C (types). Il est donc portable, notamment pour les environnements Arduino ou Raspberry Pi.
+**Portabilité.** Le décodeur est développé en C++ (pour la structure objet) et C (pour les types et manipulations de données) standards. Il est donc portable, notamment pour les environnements Arduino ou Raspberry Pi.
 Le décodeur ne lit ni n'écrit d'entrées/sorties, de pins, de port série, de GPIO, etc. Pour ça, c'est à vous de jouer !
 
-### Robustesse
-Le décodeur est basé sur le [Design Pattern État (State)](https://fr.wikipedia.org/wiki/%C3%89tat_%28patron_de_conception%29), ce qui le rend structurellement très robuste. 
+**Robustesse.** Le décodeur est basé sur le [Design Pattern État (State)](https://fr.wikipedia.org/wiki/%C3%89tat_%28patron_de_conception%29), ce qui le rend structurellement très robuste. 
 Toute donnée non attendue le ramène à son état initial en attente du début d'une nouvelle trame Téléinfo. 
 Il est donc tolérant aux trames erronées, interruptions de trames, trames prises en cours... 
 
-### Empreinte mémoire
-Pour une intégration en système embaqrué, le décodeur gère sa mémoire "en bon père de famille" : une fois le décodeur initialisé (new TeleinfoDecoder()), son empreinte mémoire reste constante, aucune allocaton/désallocation donc aucun risque de fragmentation de mémoire.
-Attention, l'objet de type *Teleinfo* retourné par le décodeur ne doit pas être désalloué (free), il est réutilisé pour les décodages de trames suivantes.  
+**Empreinte mémoire.** Pour une intégration en système embarqué, le décodeur gère sa mémoire *en bon père de famille* : une fois le décodeur initialisé (```new TeleinfoDecoder()```), son empreinte mémoire reste constante, aucune allocaton/désallocation donc aucun risque de fragmentation de mémoire.
+Attention, l'objet de type *Teleinfo* retourné par le décodeur ne doit pas être désalloué (```free```), il est réutilisé pour les décodages de trames suivantes.  
 
 ## Usage
-## Initialisation du décodeur
+## Initialisation
+Le décodeur est initialisé par la création d'une instance de *TeleinfoDecoder* :
+```C
+TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder();
+```
 
-## Décodage des informations de Téléinfo
+## Décodage
+Le décodage du flux Téléinfo se fait en injectant un à un les octets lus du flux série :
 
-## Consultation des informations de Téléinfo
+```C
+Teleinfo* teleinfo = teleinfoDecoder->decode(character);
+```
 
-### Principales méthodes 
-Méthode | Description
-- | -
-teleinfo->getAdco() | Donne le numéro de série du compteur
+La méthode ```decode(int character)``` a 2 résultats possibles :
+
+* **NULL** : aucune donnée de Téléinfo n'est disponible pour le moment; la trame en cours n'est pas terminée
+* un objet de signature *Teleinfo* : la trame Téléinfo est terminée, son contenu est disponible dans l'objet mis à disposition (voir ci-dessous)
+
+## Consultation
+Les informations de Téléinfo sont consultables sur l'objet de signature *Teleinfo* renvoyé par ```decode(int character)```.
+
+Les principales méthodes de consultation sont :
+
+Méthode | Unité | Type | Description
+------- | ----- | ---- | -----------
+```teleinfo->getAdco()``` | | ```char*``` | Donne le numéro de série du compteur
+```teleinfo->getTotalIndex()``` | Wh | ```unsigned long``` | Donne la consommation totale du compteur quelque soit l'option tarifaire (base, heures pleines/creuses, EJP, etc.). Il s'agit de la somme des valeurs *BASE*,*HCHC*,*HCHP*,*EJPHN*,*EJPHPM*,*BBRHCJB*,*BBRHPJB*,*BBRHCJW*,*BBRHPJW*,*BBRHCJR* et *BBRHPJR*. A dvier par 1000 pour obtenir des kWh plus usuels.
+```teleinfo->getInstPower()``` | W | ```int``` | Donne la puissance instantanée. Celle-ci correspondes à la valeur de *PAPP* (puissance apparente). Cette dernière n'étant pas toujours présente, la puissance est alors calculée avec 230 * IINST (intensité instantanée). 0 si IINST n'est pas disponible non plus.
+
+Pour la consultation des autres informations de Téléinfo, voir *Usage avancé*.
 
 ### Constantes
 
@@ -46,9 +63,10 @@ Afin d'alleger le code d'intégration, le TeleinfoDecoder applique 2 filtres :
 
 ## Intégration
 Pour utiliser la bibliothèque TeleinfoDecoder dans votre projet Arduino, il vous faut :
+
 1. Créer un projet dans l'IDE Arduino et le sauvegarder
 2. Copier les fichiers TeleinfoDecoder.h et TeleinfoDecoder.cpp dans le répertoire du projet 
-3. Ré-ouvrir le projet dans l'IDE Arduino, les fichiers TeleinfoDecoder.h et TeleinfoDecoder.cpp sont ouverts dans de nouveaux onglets, le décodeur peut être utilisé depuis le fichier .ino  
+3. Ré-ouvrir le projet dans l'IDE Arduino, les fichiers TeleinfoDecoder.h et TeleinfoDecoder.cpp sont ouverts dans de nouveaux onglets, le décodeur peut être utilisé depuis le fichier *.ino* 
 
 ## Code source
 
