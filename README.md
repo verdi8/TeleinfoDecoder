@@ -22,14 +22,14 @@ De plus, la bibliohèque comporte des tests unitaires *CPPUnit* qui assurent sa 
 Attention, l'objet de type *Teleinfo* retourné par le décodeur (voir plus bas) ne doit pas être désalloué (```free(...)```), il est réutilisé pour les décodages de trames suivantes.  
 
 ## Usage
-## Initialisation
+### Initialisation
 Le décodeur est initialisé par la création d'une instance de *TeleinfoDecoder* :
 
 ```C
 TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder();
 ```
 
-## Décodage
+### Décodage
 Le décodage du flux Téléinfo se fait en injectant un à un les octets lus du flux série :
 
 ```C
@@ -41,7 +41,7 @@ La méthode ```decode(int character)``` a 2 résultats possibles :
 * **NULL** : aucune donnée de Téléinfo n'est disponible pour le moment; la trame en cours n'est pas terminée
 * **un objet de signature *Teleinfo** *: la trame Téléinfo est terminée, son contenu est disponible dans l'objet mis à disposition (voir ci-dessous)
 
-## Consultation
+### Consultation
 Les informations de Téléinfo sont consultables sur l'objet de signature *Teleinfo* renvoyé par ```decode(int character)```.
 
 Les principales méthodes de consultation sont :
@@ -49,8 +49,8 @@ Les principales méthodes de consultation sont :
 Méthode | Unité | Type | Description
 ------- | ----- | ---- | -----------
 ```teleinfo->getAdco()``` | | ```char*``` | Donne le numéro de série du compteur
-```teleinfo->getTotalIndex()``` | Wh | ```unsigned long``` | Donne la consommation totale du compteur quelque soit l'option tarifaire (base, heures pleines/creuses, EJP, etc.). Il s'agit de la somme des valeurs *BASE*,*HCHC*,*HCHP*,*EJPHN*,*EJPHPM*,*BBRHCJB*,*BBRHPJB*,*BBRHCJW*,*BBRHPJW*,*BBRHCJR* et *BBRHPJR*. A dvier par 1000 pour obtenir des kWh plus usuels.
-```teleinfo->getInstPower()``` | W | ```int``` | Donne la puissance instantanée. Celle-ci correspondes à la valeur de *PAPP* (puissance apparente). Cette dernière n'étant pas toujours présente, la puissance est alors calculée avec 230 * IINST (intensité instantanée). 0 si IINST n'est pas disponible non plus.
+```teleinfo->getTotalIndex()``` | Wh | ```unsigned long``` | Donne la consommation totale du compteur quelque soit l'option tarifaire (base, heures pleines/creuses, EJP, etc.). Il s'agit de la somme des valeurs *BASE*, *HCHC*, *HCHP*, *EJPHN*, *EJPHPM*, *BBRHCJB*, *BBRHPJB*, *BBRHCJW*, *BBRHPJW*, *BBRHCJR* et *BBRHPJR*. A diviser par 1000 pour obtenir des kWh plus usuels.
+```teleinfo->getInstPower()``` | W | ```int``` | Donne la puissance instantanée. Celle-ci correspond à la valeur de *PAPP* (puissance apparente). Cette dernière n'étant pas toujours présente, la puissance est alors calculée avec 230 (V) * IINST (intensité instantanée). Si IINST n'est pas disponible non plus, renvoit 0.
 
 Pour la consultation des autres informations de Téléinfo, voir *Usage avancé*.
 
@@ -59,7 +59,7 @@ Pour la consultation des autres informations de Téléinfo, voir *Usage avancé*
 La bibliothèque met à disposition une constante utilitaire ```TELEINFO_BAUD_RATE``` qui correspond au débit du flux Téléinfo (1200 baud).
 Celle-ci n'est pas utilisée dans le décodeur mais peut être utilisée pour paramétrer un port série de lecture du flux.
 
-## Divers
+### Divers
 Afin d'alléger le code d'intégration le TeleinfoDecoder applique 2 filtres : 
 * il ignore les caractères de valeur -1 (qui peut être renvoyé par une lecture de port série sans octet disponible, par exemple)
 * les caractères du flux Téléinfo sont codés sur 7 bits + 1 bit de parité, ce dernier est ignoré par un ET logique 7Fh   
