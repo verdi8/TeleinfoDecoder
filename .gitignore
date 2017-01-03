@@ -1,5 +1,4 @@
 .cproject
 .project
-settings/*
+.settings/*
 doxygen.conf
-

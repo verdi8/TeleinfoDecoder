@@ -18,9 +18,9 @@ Le décodeur ne lit ni n'écrit d'entrées/sorties, de pins, de port série, de 
 **Robustesse.** Le décodeur est basé sur le [Design Pattern État (State)](https://fr.wikipedia.org/wiki/%C3%89tat_%28patron_de_conception%29), ce qui le rend structurellement très robuste. 
 Toute donnée non attendue le ramène à son état initial en attente du début d'une nouvelle trame Téléinfo. 
 Il est donc tolérant aux trames erronées, interruptions de trames, trames prises en cours...
-De plus, la bibliohèque comporte des tests unitaires *CPPUnit* qui assurent sa **stabilité** dans le temps et permettent d'éprouver sa robustesse en reproduisant des cas critiques (interruption, erreurs de trames, etc.). [en cours de développement]   
+De plus, la bibliothèque comporte des tests unitaires *CPPUnit* qui assurent sa **stabilité** dans le temps et permettent d'éprouver sa robustesse en reproduisant des cas critiques (interruption, erreurs de trames, etc.). [en cours de développement]   
 
-**Empreinte mémoire.** Pour une intégration en système embarqué, le décodeur gère sa mémoire *en bon père de famille* : une fois le décodeur initialisé (```new TeleinfoDecoder()```), son empreinte mémoire reste constante, aucune allocaton/désallocation dynamique n'est efefctuée donc aucun risque de fragmentation de mémoire.
+**Empreinte mémoire.** Pour une intégration en système embarqué, le décodeur gère sa mémoire *en bon père de famille* : une fois le décodeur initialisé (```new TeleinfoDecoder()```), son empreinte mémoire reste constante, aucune allocaton/désallocation dynamique n'est effectuée donc aucun risque de fragmentation de mémoire.
 Attention, l'objet de type *Teleinfo* retourné par le décodeur (voir plus bas) ne doit pas être désalloué (```free(...)```), il est réutilisé pour les décodages de trames suivantes.  
 
 ## Usage
@@ -41,20 +41,20 @@ Teleinfo* teleinfo = teleinfoDecoder->decode(character);
 La méthode ```decode(int character)``` a 2 résultats possibles :
 
 * **NULL** : aucune donnée de Téléinfo n'est disponible pour le moment; la trame en cours n'est pas terminée
-* **un objet de signature *Teleinfo** *: la trame Téléinfo est terminée, son contenu est disponible dans l'objet mis à disposition (voir ci-dessous)
+* **un objet de signature *Teleinfo* **: la trame Téléinfo est terminée, son contenu est disponible dans l'objet *Teleinfo* mis à disposition (voir ci-dessous)
 
 ### Consultation
 Les informations de Téléinfo sont consultables sur l'objet de signature *Teleinfo* renvoyé par ```decode(int character)```.
 
-Les principales méthodes de consultation sont :
+Les méthodes simplifiées de consultation sont :
 
 Méthode | Unité | Type | Description
 ------- | ----- | ---- | -----------
 ```teleinfo->getAdco()``` | | ```char*``` | Donne le numéro de série du compteur
 ```teleinfo->getTotalIndex()``` | Wh | ```unsigned long``` | Donne la consommation totale du compteur quelque soit l'option tarifaire (base, heures pleines/creuses, EJP, etc.). Il s'agit de la somme des valeurs *BASE*, *HCHC*, *HCHP*, *EJPHN*, *EJPHPM*, *BBRHCJB*, *BBRHPJB*, *BBRHCJW*, *BBRHPJW*, *BBRHCJR* et *BBRHPJR*. A diviser par 1000 pour obtenir des kWh plus usuels.
-```teleinfo->getInstPower()``` | W | ```int``` | Donne la puissance instantanée. Celle-ci correspond à la valeur de *PAPP* (puissance apparente). Cette dernière n'étant pas toujours présente, la puissance est alors calculée avec 230 (V) * IINST (intensité instantanée). Si IINST n'est pas disponible non plus, renvoit 0.
+```teleinfo->getInstPower()``` | W | ```int``` | Donne la puissance instantanée. Celle-ci correspond à la valeur de *PAPP* (puissance apparente). Cette dernière n'étant pas toujours présente, la puissance est alors calculée avec 230 (V) * IINST (intensité instantanée). Si IINST n'est pas disponible non plus, retourne 0.
 
-Pour la consultation des autres informations de Téléinfo, voir *Usage avancé*.
+Pour la consultation des autres informations de Téléinfo, voir [Usage avancé] (#usage-avancé).
 
 ### Constantes
 
@@ -66,7 +66,7 @@ Afin d'alléger le code d'intégration le TeleinfoDecoder applique 2 filtres :
 * il ignore les caractères de valeur -1 (qui peut être renvoyé par une lecture de port série sans octet disponible, par exemple)
 * les caractères du flux Téléinfo sont codés sur 7 bits + 1 bit de parité, ce dernier est ignoré par un ET logique 7Fh   
 
-Du code en moins à écrire avant d'appeler ```decode(int character)```.
+Bref, du code en moins à écrire avant d'appeler ```decode(int character)```.
 
 # Exemples 
 ## En environnement Arduino
@@ -83,9 +83,9 @@ Le code source suivant :
 
 * lit le flux Téléinfo sur le pin 10 de l'Arduino
 * décode le flux à l'aide de cette bibliothèque
-* envoit vers le Moniteur série de l'IDE ARduino des informations de base (n° du compteur, index totale, puissance instantanée) 
+* envoie vers le Moniteur série de l'IDE Arduino des informations de base (n° du compteur, index total, puissance instantanée) 
 
-Les commentaires dans le code permettent de mieux le comprendre :  
+Voir les commentaires dans le code permettent pour tout comprendre :  
 
 ```C
 #include <SoftwareSerial.h>
@@ -115,8 +115,8 @@ void loop() {
   teleinfoSerial->end();
   // Fin de décodage du flux
   
-  // Traitement des informations récupérées dans l'objet Teleinfo (par exemple, ESP8266, RfxCom, afficheur, etc.)
-  // Ici : transmission au Moniteur série de l'IDE Arduino
+  // Traitement des informations récupérées dans l'objet Teleinfo 
+  // Ici : transmission au Moniteur série de l'IDE Arduino, mais vous pouvez mettre tout ce que vous voulez en faire (par exemple, ESP8266, RfxCom, afficheur, etc.)
   Serial.print("Compteur No : "); Serial.println(teleinfo->getAdco());
   Serial.print("Consommation totale (Wh) : "); Serial.println(teleinfo->getTotalIndex());
   Serial.print("Puissance instantanée (W) : "); Serial.println(teleinfo->getInstPower());
@@ -161,8 +161,8 @@ Méthode | Etiquette Téléinfo | Description | Unité | Type
 ```
 .
 ├── bin         les exécutables générés par la compilaton
-├── build       les fichiers intermédiaires de la comilation       
-├── lib         les bibliothèques du décodeur sous forme compilée  
+├── build       les fichiers intermédiaires lors de la comilation       
+├── lib         les bibliothèques du décodeur générées par la compilaton
 ├── src         le code source du décodeur (fichiers .h et .cpp)
 ├── test        le code source des tests unitaires du décodeur 
 ├── LICENSE
@@ -171,7 +171,7 @@ Méthode | Etiquette Téléinfo | Description | Unité | Type
 ```
 
 ### Construction
-#### Génération de la bibliothèque
+#### Compilation
 Pour compiler le décodeur :
 
 ```
