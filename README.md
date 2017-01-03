@@ -127,8 +127,8 @@ void loop() {
 }
 ```
 
-# Usage avancé
-## Consultation
+## Usage avancé
+### Consultation
 Méthode | Etiquette Téléinfo | Description | Unité | Type
 ------- | ------------------ | ----------- | ----- | ----
 ```teleinfo->getAdco()``` | ADCO | Donne l'*Adresse du compteur* | | ```char*```
@@ -154,3 +154,37 @@ Méthode | Etiquette Téléinfo | Description | Unité | Type
 ```teleinfo->getPapp()``` | PAPP | Donne la *Puissance apparente* | W | ```int```
 ```teleinfo->getHhphc()``` | HHPHC | donne l'*Horaire heure creuse heure pleine* |  | ```char```
 ```teleinfo->getMotdetat()``` | MOTDETAT | donne le *Mot d'état du compteur* |  | ```char*```
+
+## Code
+### Arborescence
+
+```
+.
+├── bin         les exécutables générés par la compilaton
+├── build       les fichiers intermédiaires de la comilation       
+├── lib         les bibliothèques du décodeur sous forme compilée  
+├── src         le code source du décodeur (fichiers .h et .cpp)
+├── test        le code source des tests unitaires du décodeur 
+├── LICENSE
+├── Makefile           
+└── README.md                          
+```
+
+### Construction
+#### Génération de la bibliothèque
+Pour compiler le décodeur :
+
+```
+make all
+```
+
+La bibliothèque du décodeur *libteleinfodecoder.a* est disponible dans le répertoire *lib*.
+#### Tests unitaires
+Pour lancer les tests unitaires :
+
+```
+make test
+```
+
+Cette commande lance la compilation du décodeur et génère un executable runtests(.exe) qui est lancé.
+ 
