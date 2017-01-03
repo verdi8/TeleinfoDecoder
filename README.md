@@ -183,7 +183,7 @@ La bibliothèque du décodeur *libteleinfodecoder.a* est disponible dans le rép
 Pour lancer les tests unitaires :
 
 ```
-make test
+make test-all
 ```
 
 Cette commande compile le décodeur et génère un executable runtests(.exe) qui est lui-même lancé.

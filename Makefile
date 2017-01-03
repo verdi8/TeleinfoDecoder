@@ -17,6 +17,8 @@ ARFLAGS = crf
 
 # Construction -----------------------------------------------------------------------------------------
 
+all: clean build
+
 clean:
 	$(RM) -r $(BUILDDIR)/*
 	$(RM) -r $(DOCDIR)/*
@@ -42,9 +44,4 @@ run-test: build-test
 	${BINDIR}/runtests
 	
 .PHONY: test
-test: all clean-test build-test run-test
-
-all: clean build
-
-generate-docs:
-	doxygen doxygen.conf
+test-all: all clean-test build-test run-test
