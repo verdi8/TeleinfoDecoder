@@ -16,6 +16,7 @@ using namespace std;
 class TeleinfoDecoderTest : public CppUnit::TestFixture {
 
 public:
+
 	/**
 	 * Test avec tous les groupes valorisés (même si c'est un cas irréel)
 	 */
@@ -74,7 +75,7 @@ public:
 	}
 
 	/**
-	 * Test avec une toute patite trame (adresse du compteur seul, même si c'est irréel)
+	 * Test avec une toute petite trame (adresse du compteur seul, même si c'est irréel)
 	 */
 	void testTrameMinimaliste() {
 		TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder;
@@ -83,7 +84,83 @@ public:
 		Teleinfo* teleinfo = injectEndText(teleinfoDecoder);
 		CPPUNIT_ASSERT(teleinfo != NULL);
 		CPPUNIT_ASSERT(strcmp(teleinfo->getAdco(), "026489026467") == 0);
+		CPPUNIT_ASSERT(strcmp(teleinfo->getOptarif(), "") == 0);
+		CPPUNIT_ASSERT(teleinfo->getIsousc() == 0);
+		CPPUNIT_ASSERT(teleinfo->getBase() == 0);
+		CPPUNIT_ASSERT(teleinfo->getHchc() == 0);
+		CPPUNIT_ASSERT(teleinfo->getHchp() == 0);
+		CPPUNIT_ASSERT(teleinfo->getEjphn() == 0);
+		CPPUNIT_ASSERT(teleinfo->getEjphpm() == 0);
+		CPPUNIT_ASSERT(teleinfo->getBbrhcjb() == 0);
+		CPPUNIT_ASSERT(teleinfo->getBbrhpjb() == 0);
+		CPPUNIT_ASSERT(teleinfo->getBbrhcjw() == 0);
+		CPPUNIT_ASSERT(teleinfo->getBbrhpjw() == 0);
+		CPPUNIT_ASSERT(teleinfo->getBbrhcjr() == 0);
+		CPPUNIT_ASSERT(teleinfo->getBbrhpjr() == 0);
+		CPPUNIT_ASSERT(teleinfo->getPejp() == 0);
+		CPPUNIT_ASSERT(strcmp(teleinfo->getPtec(), "") == 0);
+		CPPUNIT_ASSERT(strcmp(teleinfo->getDemain(), "") == 0);
+		CPPUNIT_ASSERT(teleinfo->getAdps() == 0);
+		CPPUNIT_ASSERT(teleinfo->getIinst() == 0);
+		CPPUNIT_ASSERT(teleinfo->getImax() == 0);
+		CPPUNIT_ASSERT(teleinfo->getPapp() == 0);
+		CPPUNIT_ASSERT(teleinfo->getHhphc() == '\0');
+		CPPUNIT_ASSERT(strcmp(teleinfo->getMotdetat(), "") == 0);
 	}
+
+	/**
+	 * Test d'une trame interrompue et reprise au début
+	 */
+	void testTrameInterrompueEot() {
+		TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder;
+		CPPUNIT_ASSERT(injectStartText(teleinfoDecoder) == NULL);
+		CPPUNIT_ASSERT(injectGroupe(teleinfoDecoder, "ADCO", "026489026467") == NULL);
+		CPPUNIT_ASSERT(injectGroupe(teleinfoDecoder, "OPTARIF", "BASE") == NULL);
+		CPPUNIT_ASSERT(injectGroupe(teleinfoDecoder, "ISOUSC", "30") == NULL);
+		CPPUNIT_ASSERT(injectGroupe(teleinfoDecoder, "BASE", "988777775") == NULL);
+
+		// Interruption et reprise
+		CPPUNIT_ASSERT(injectEndOfTransmission(teleinfoDecoder) == NULL);
+		CPPUNIT_ASSERT(injectStartText(teleinfoDecoder) == NULL);
+		CPPUNIT_ASSERT(injectGroupe(teleinfoDecoder, "ADCO", "200638824480") == NULL);
+		CPPUNIT_ASSERT(injectGroupe(teleinfoDecoder, "OPTARIF", "EJP") == NULL);
+		CPPUNIT_ASSERT(injectGroupe(teleinfoDecoder, "ISOUSC", "20") == NULL);
+		CPPUNIT_ASSERT(injectGroupe(teleinfoDecoder, "EJPHN", "000003365") == NULL);
+		Teleinfo* teleinfo = injectEndText(teleinfoDecoder);
+
+		CPPUNIT_ASSERT(teleinfo != NULL);
+		CPPUNIT_ASSERT(strcmp(teleinfo->getAdco(), "200638824480") == 0);
+		CPPUNIT_ASSERT(strcmp(teleinfo->getOptarif(), "EJP") == 0);
+		CPPUNIT_ASSERT(teleinfo->getIsousc() == 20);
+		CPPUNIT_ASSERT(teleinfo->getBase() == 0);
+		CPPUNIT_ASSERT(teleinfo->getEjphn() == 3365);
+	}
+
+	/**
+	 * Test d'une trame avec un groupe avec un mauvais checksum
+	 */
+	void testTrameBadChecksum() {
+		TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder;
+
+		// Trame avec un mauvais checksum
+		CPPUNIT_ASSERT(injectStartText(teleinfoDecoder) == NULL);
+		CPPUNIT_ASSERT(injectLineFeed(teleinfoDecoder) == NULL);
+		CPPUNIT_ASSERT(injectText(teleinfoDecoder, "ADCO") == NULL);
+		CPPUNIT_ASSERT(injectSpace(teleinfoDecoder) == NULL);
+		CPPUNIT_ASSERT(injectText(teleinfoDecoder, "026489026467") == NULL);
+		CPPUNIT_ASSERT(injectSpace(teleinfoDecoder) == NULL);
+		CPPUNIT_ASSERT(injectCharacter(teleinfoDecoder, 0xFF) == NULL); // Mauvais checksum
+		CPPUNIT_ASSERT(injectCarriageReturn(teleinfoDecoder) == NULL);
+		CPPUNIT_ASSERT(injectEndText(teleinfoDecoder) == NULL);
+
+		// Nouvelle trame avec un bon checksum
+		CPPUNIT_ASSERT(injectStartText(teleinfoDecoder) == NULL);
+		CPPUNIT_ASSERT(injectGroupe(teleinfoDecoder, "ADCO", "279678009862") == NULL);
+		Teleinfo* teleinfo = injectEndText(teleinfoDecoder);
+		CPPUNIT_ASSERT(teleinfo != NULL);
+		CPPUNIT_ASSERT(strcmp(teleinfo->getAdco(), "279678009862") == 0);
+	}
+
 
 	/**
 	 * Test du calcul particulier de getInstPower()
@@ -105,14 +182,66 @@ public:
 		CPPUNIT_ASSERT(teleinfo != NULL);
 		CPPUNIT_ASSERT(teleinfo->getInstPower() == 3910);
 
-		// Intensité transmise dans IINST et puissance apparent dans PAPP
+		// Intensité transmise dans IINST et puissance apparente dans PAPP
 		injectStartText(teleinfoDecoder);
 		injectGroupe(teleinfoDecoder, "ADCO", "026489026467");
 		injectGroupe(teleinfoDecoder, "IINST", "17");
 		injectGroupe(teleinfoDecoder, "PAPP", "4000");
 		teleinfo = injectEndText(teleinfoDecoder);
 		CPPUNIT_ASSERT(teleinfo->getInstPower() == 4000);
+	}
 
+	/**
+	 * Test de la méthode getTotalIndex()
+	 */
+	void testGetTotalIndex() {
+		TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder;
+		injectStartText(teleinfoDecoder);
+		injectGroupe(teleinfoDecoder, "ADCO", "026489026467");
+		injectGroupe(teleinfoDecoder, "BASE", "006789543");
+		injectGroupe(teleinfoDecoder, "HCHC", "000654398");
+		injectGroupe(teleinfoDecoder, "HCHP", "009755123");
+		injectGroupe(teleinfoDecoder, "EJPHN", "000003365");
+		injectGroupe(teleinfoDecoder, "EJPHPM", "003556600");
+		injectGroupe(teleinfoDecoder, "BBRHCJB", "002836660");
+		injectGroupe(teleinfoDecoder, "BBRHPJB", "001117777");
+		injectGroupe(teleinfoDecoder, "BBRHCJW", "900222022");
+		injectGroupe(teleinfoDecoder, "BBRHPJW", "568800001");
+		injectGroupe(teleinfoDecoder, "BBRHCJR", "009222010");
+		injectGroupe(teleinfoDecoder, "BBRHPJR", "000001112");
+		Teleinfo* teleinfo = injectEndText(teleinfoDecoder);
+
+		CPPUNIT_ASSERT(teleinfo->getTotalIndex() == 1502958611);
+	}
+
+	/**
+	 * Test de la méthode getTotalIndex() avec des valeurs maximales
+	 */
+	void testGetTotalIndexMax() {
+		TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder;
+		injectStartText(teleinfoDecoder);
+		injectGroupe(teleinfoDecoder, "ADCO", "026489026467");
+		injectGroupe(teleinfoDecoder, "BASE", "999999999");
+		injectGroupe(teleinfoDecoder, "HCHC", "999999999");
+		injectGroupe(teleinfoDecoder, "HCHP", "999999999");
+		injectGroupe(teleinfoDecoder, "EJPHN", "999999999");
+		injectGroupe(teleinfoDecoder, "EJPHPM", "999999999");
+		injectGroupe(teleinfoDecoder, "BBRHCJB", "999999999");
+		injectGroupe(teleinfoDecoder, "BBRHPJB", "999999999");
+		injectGroupe(teleinfoDecoder, "BBRHCJW", "999999999");
+		injectGroupe(teleinfoDecoder, "BBRHPJW", "999999999");
+		injectGroupe(teleinfoDecoder, "BBRHCJR", "999999999");
+		injectGroupe(teleinfoDecoder, "BBRHPJR", "999999999");
+		Teleinfo* teleinfo = injectEndText(teleinfoDecoder);
+
+		CPPUNIT_ASSERT(teleinfo->getTotalIndex() == 10999999989);
+	}
+
+	/**
+	 * Test des constantes
+	 */
+	void testConstantes() {
+		CPPUNIT_ASSERT(TELEINFO_BAUD_RATE == 1200);
 	}
 
 private:
@@ -214,7 +343,12 @@ private:
 	CPPUNIT_TEST_SUITE(TeleinfoDecoderTest);
 	CPPUNIT_TEST(testTrameComplete);
 	CPPUNIT_TEST(testTrameMinimaliste);
+	CPPUNIT_TEST(testTrameInterrompueEot);
+	CPPUNIT_TEST(testTrameBadChecksum);
 	CPPUNIT_TEST(testGetInstPower);
+	CPPUNIT_TEST(testGetTotalIndex);
+	CPPUNIT_TEST(testGetTotalIndexMax);
+	CPPUNIT_TEST(testConstantes);
 	CPPUNIT_TEST_SUITE_END();
 
 };

@@ -20,8 +20,8 @@ Toute donnée non attendue le ramène à son état initial en attente du début 
 Il est donc tolérant aux trames erronées, interruptions de trames, trames prises en cours...
 De plus, la bibliothèque comporte des tests unitaires *CPPUnit* qui assurent sa **stabilité** dans le temps et permettent d'éprouver sa robustesse en reproduisant des cas critiques (interruption, erreurs de trames, etc.). [en cours de développement]   
 
-**Empreinte mémoire.** Pour une intégration en système embarqué, le décodeur gère sa mémoire *en bon père de famille* : une fois le décodeur initialisé (```new TeleinfoDecoder()```), son empreinte mémoire reste constante, aucune allocaton/désallocation dynamique n'est effectuée donc aucun risque de fragmentation de mémoire.
-Attention, l'objet de type *Teleinfo* retourné par le décodeur (voir plus bas) ne doit pas être désalloué (```free(...)```), il est réutilisé pour les décodages de trames suivantes.  
+**Empreinte mémoire.** Pour une intégration en système embarqué, le décodeur gère sa mémoire *en bon père de famille* : une fois le décodeur initialisé (```new TeleinfoDecoder()```), son empreinte mémoire reste constante, aucune allocaton/désallocation dynamique n'est effectuée donc aucun risque de fragmentation de la mémoire.
+*Attention.* l'objet de type *Teleinfo* retourné par le décodeur (voir plus bas) ne doit pas être désalloué (```free(...)```), il est réutilisé pour les décodages de trames suivantes.  
 
 ## Usage
 ### Initialisation
@@ -74,8 +74,8 @@ Bref, du code en moins à écrire avant d'appeler ```decode(int character)```.
 Pour utiliser la bibliothèque TeleinfoDecoder dans votre projet Arduino, il vous faut :
 
 1. Créer un projet dans l'IDE Arduino et le sauvegarder
-2. Copier les fichiers TeleinfoDecoder.h et TeleinfoDecoder.cpp dans le répertoire du projet 
-3. Ré-ouvrir le projet dans l'IDE Arduino, les fichiers TeleinfoDecoder.h et TeleinfoDecoder.cpp sont ouverts dans de nouveaux onglets, le décodeur peut être utilisé depuis le fichier *.ino* 
+2. Copier les fichiers *src/TeleinfoDecoder.h* et *src/TeleinfoDecoder.cpp* dans le répertoire du projet 
+3. Ré-ouvrir le projet dans l'IDE Arduino, les fichiers *TeleinfoDecoder.h* et *TeleinfoDecoder.cpp* sont ouverts dans de nouveaux onglets, le décodeur peut être utilisé depuis le fichier *.ino* 
 
 ### Code source
 
@@ -83,9 +83,9 @@ Le code source suivant :
 
 * lit le flux Téléinfo sur le pin 10 de l'Arduino
 * décode le flux à l'aide de cette bibliothèque
-* envoie vers le Moniteur série de l'IDE Arduino des informations de base (n° du compteur, index total, puissance instantanée) 
+* envoie vers le Moniteur série de l'IDE Arduino (en 115200 baud) quelques informations lues (n° du compteur, index total, puissance instantanée) 
 
-Voir les commentaires dans le code permettent pour tout comprendre :  
+Voir les commentaires dans le code pour tout comprendre :  
 
 ```C
 #include <SoftwareSerial.h>
@@ -161,7 +161,7 @@ Méthode | Etiquette Téléinfo | Description | Unité | Type
 ```
 .
 ├── bin         les exécutables générés par la compilaton
-├── build       les fichiers intermédiaires lors de la comilation       
+├── build       les fichiers intermédiaires lors de la compilation       
 ├── lib         les bibliothèques du décodeur générées par la compilaton
 ├── src         le code source du décodeur (fichiers .h et .cpp)
 ├── test        le code source des tests unitaires du décodeur 

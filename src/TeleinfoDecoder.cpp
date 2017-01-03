@@ -282,7 +282,7 @@ public:
 		adps = 0;
 		imax = 0;
 		papp = 0;
-		hhphc = 0;
+		hhphc = '\0';
 		memset(motdetat, '\0', sizeof(motdetat));
 	}
 

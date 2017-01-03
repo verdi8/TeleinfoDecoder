@@ -6,8 +6,8 @@
 #ifndef TELEINFO_DECODER_H_
 #define TELEINFO_DECODER_H_
 
-/*
- * Paramétrage de la liaison
+/**
+ * Constante donnant le débit de liaison série du flux Téléinfo
  */
 #define TELEINFO_BAUD_RATE   1200
 
