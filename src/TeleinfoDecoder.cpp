@@ -1,8 +1,6 @@
 /**
  * Implémentation du décodeur Téléinfo
  *
- *
- *
  * @author LK
  */
 #include "TeleinfoDecoder.h"

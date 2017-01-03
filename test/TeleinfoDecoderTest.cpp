@@ -1,6 +1,9 @@
 /**
+ * Copyright (c) 2017 L. Knoll
+ *
  * Test unitaire du décodeur Téléinfo
  * @author LK
+ *
  */
 
 #include "TeleinfoDecoder.h"
