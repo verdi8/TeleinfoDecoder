@@ -1,6 +1,5 @@
 .cproject
 .project
+settings/*
 doxygen.conf
-/bin/*
-/build/*.o
-/lib/*.a
+

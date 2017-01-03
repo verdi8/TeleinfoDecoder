@@ -186,5 +186,5 @@ Pour lancer les tests unitaires :
 make test
 ```
 
-Cette commande lance la compilation du décodeur et génère un executable runtests(.exe) qui est lancé.
+Cette commande compile le décodeur et génère un executable runtests(.exe) qui est lui-même lancé.
  
