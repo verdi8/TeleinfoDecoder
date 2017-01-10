@@ -158,7 +158,7 @@ Méthode | Etiquette Téléinfo | Description | Unité | Type
 ### Consultation spéciale
 Méthode | Description
 ------- | -----------
-```teleinfo->getAdcoChecksum8()``` | Calcule un checksum modulo 256 de l*'Adresse du compteur*. Peut consituer une adresse sur 8 bits du compteur. Par exemple, cette valeur peut servir d'identifiant de sonde dans un protocole de transmission radio de la consommation électrique.       
+```teleinfo->getAdcoChecksum8()``` | Calcule un checksum modulo 256 de l*'Adresse du compteur*. Peut constituer une adresse sur 8 bits du compteur. Par exemple, cette valeur peut servir d'identifiant de sonde dans un protocole de transmission radio de la consommation électrique.       
 ```teleinfo->getAdcoAsLong()``` | Donne l'*Adresse du compteur* sous la forme d'un entier long positif. Elimine les zéros non signifcatifs.    
 
 ## Code
