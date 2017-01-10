@@ -420,11 +420,8 @@ private:
 	CPPUNIT_TEST(testGetInstPower);
 	CPPUNIT_TEST(testGetTotalIndex);
 	CPPUNIT_TEST(testGetTotalIndexMax);
-<<<<<<< HEAD
 	CPPUNIT_TEST(testGetAdcoAsLong);
 	CPPUNIT_TEST(testGetAdcoChecksum8);
-=======
->>>>>>> 86e6ddce55c9f092414bb4779b190e1ef4e608c2
 	CPPUNIT_TEST(testConstantes);
 	CPPUNIT_TEST_SUITE_END();
 
