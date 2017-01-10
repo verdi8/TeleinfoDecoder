@@ -131,7 +131,7 @@ class Teleinfo {
      */
     virtual char* getMotdetat()=0; 
 
-    // Méthodes pratiques ------------------------------------------------------------------------------------------------------------------
+    // Fonctions spéciales -----------------------------------------------------------------------------------------------------------------
 
     /**
      * Donne l'index total (la somme de tous les index quelque soit l'option)
@@ -143,6 +143,17 @@ class Teleinfo {
      * @return la valeur de PAPP (Puissance apparente) si disponible, sinon la valeur de IINST x 230V si disponible, 0 sinon
      */
     virtual int getInstPower()=0;
+
+    /**
+     * Donne l'Adresse du compteur sous forme d'un entier positif long
+     * @return l'adresse du compteur, 0 si elle ne peut être parsée (voir la fonction standard strtoul(...))
+     */
+    virtual unsigned long getAdcoAsLong()=0;
+
+    /**
+     * Donne un checksum sur 8 bits de l'adresse du compteur
+     */
+    virtual unsigned int getAdcoChecksum8()=0;
 
 };
 

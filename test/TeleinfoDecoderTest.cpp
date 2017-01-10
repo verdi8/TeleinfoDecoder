@@ -238,6 +238,76 @@ public:
 	}
 
 	/**
+	 * Test de la méthode getTotalIndex() avec des valeurs maximales
+	 */
+	void testGetAdcoAsLong() {
+		TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder;
+		Teleinfo* teleinfo;
+
+		injectStartText(teleinfoDecoder);
+		injectGroupe(teleinfoDecoder, "ADCO", "026489026467");
+		injectGroupe(teleinfoDecoder, "BASE", "000000001");
+		teleinfo = injectEndText(teleinfoDecoder);
+
+		CPPUNIT_ASSERT(teleinfo->getAdcoAsLong() == 26489026467);
+
+		injectStartText(teleinfoDecoder);
+		injectGroupe(teleinfoDecoder, "ADCO", "999999999999");
+		injectGroupe(teleinfoDecoder, "BASE", "000000001");
+		teleinfo = injectEndText(teleinfoDecoder);
+
+		CPPUNIT_ASSERT(teleinfo->getAdcoAsLong() == 999999999999);
+
+		injectStartText(teleinfoDecoder);
+		injectGroupe(teleinfoDecoder, "ADCO", "000000000000");
+		injectGroupe(teleinfoDecoder, "BASE", "000000001");
+		teleinfo = injectEndText(teleinfoDecoder);
+
+		CPPUNIT_ASSERT(teleinfo->getAdcoAsLong() == 0);
+
+		injectStartText(teleinfoDecoder);
+		injectGroupe(teleinfoDecoder, "ADCO", "ABCDEFGHIJKL");
+		injectGroupe(teleinfoDecoder, "BASE", "000000001");
+		teleinfo = injectEndText(teleinfoDecoder);
+
+		CPPUNIT_ASSERT(teleinfo->getAdcoAsLong() == 0);
+
+		injectStartText(teleinfoDecoder);
+		injectGroupe(teleinfoDecoder, "BASE", "000000001");
+		teleinfo = injectEndText(teleinfoDecoder);
+
+		CPPUNIT_ASSERT(teleinfo->getAdcoAsLong() == 0);
+	}
+
+	void testGetAdcoChecksum8() {
+		TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder;
+		Teleinfo* teleinfo;
+
+		injectStartText(teleinfoDecoder);
+		injectGroupe(teleinfoDecoder, "ADCO", "026489026467");
+		injectGroupe(teleinfoDecoder, "BASE", "000000001");
+		teleinfo = injectEndText(teleinfoDecoder);
+
+		CPPUNIT_ASSERT(teleinfo->getAdcoChecksum8() == 0x76);
+
+		injectStartText(teleinfoDecoder);
+		injectGroupe(teleinfoDecoder, "BASE", "000000001");
+		teleinfo = injectEndText(teleinfoDecoder);
+
+		CPPUNIT_ASSERT(teleinfo->getAdcoChecksum8() == 0x0);
+
+
+		injectStartText(teleinfoDecoder);
+		injectGroupe(teleinfoDecoder, "ADCO", "0");
+		injectGroupe(teleinfoDecoder, "BASE", "000000001");
+		teleinfo = injectEndText(teleinfoDecoder);
+
+		CPPUNIT_ASSERT(teleinfo->getAdcoChecksum8() == 0x30);
+
+
+	}
+
+	/**
 	 * Test des constantes
 	 */
 	void testConstantes() {
@@ -332,7 +402,7 @@ private:
 	 */
 	int computeChecksum(string etiquette, string donnee) {
 		int checksum = 0;
-	string text = etiquette + " " + donnee;
+		string text = etiquette + " " + donnee;
 		for(unsigned int i = 0; i < text.length(); i++) {
 			checksum += text[i];
 		}
@@ -348,6 +418,8 @@ private:
 	CPPUNIT_TEST(testGetInstPower);
 	CPPUNIT_TEST(testGetTotalIndex);
 	CPPUNIT_TEST(testGetTotalIndexMax);
+	CPPUNIT_TEST(testGetAdcoAsLong);
+	CPPUNIT_TEST(testGetAdcoChecksum8);
 	CPPUNIT_TEST(testConstantes);
 	CPPUNIT_TEST_SUITE_END();
 

@@ -173,6 +173,18 @@ public:
 	char* getAdco() {
 		return adco;
 	}
+    unsigned long getAdcoAsLong() {
+    	return strtoul(adco, NULL, 10);
+    }
+    unsigned int getAdcoChecksum8() {
+    	unsigned int checksum8 = 0;
+    	char* ptr = adco;
+    	while(int val = *ptr) {
+    		checksum8 = (checksum8 + *ptr++) & 0xFF;
+    	}
+    	return checksum8;
+    }
+
 	char* getOptarif() {
 		return optarif;
 	}

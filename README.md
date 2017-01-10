@@ -128,7 +128,7 @@ void loop() {
 ```
 
 ## Usage avancé
-### Consultation
+### Consultation standard
 Méthode | Etiquette Téléinfo | Description | Unité | Type
 ------- | ------------------ | ----------- | ----- | ----
 ```teleinfo->getAdco()``` | ADCO | Donne l'*Adresse du compteur* | | ```char*```
@@ -154,6 +154,12 @@ Méthode | Etiquette Téléinfo | Description | Unité | Type
 ```teleinfo->getPapp()``` | PAPP | Donne la *Puissance apparente* | W | ```int```
 ```teleinfo->getHhphc()``` | HHPHC | donne l'*Horaire heure creuse heure pleine* |  | ```char```
 ```teleinfo->getMotdetat()``` | MOTDETAT | donne le *Mot d'état du compteur* |  | ```char*```
+
+### Consultation spéciale
+Méthode | Description
+------- | -----------
+```teleinfo->getAdcoChecksum8()``` | Calcule un checksum modulo 256 de l*'Adresse du compteur*. Peut consituer une adresse sur 8 bits du compteur. Par exemple, cette valeur peut servir d'identifiant de sonde dans un protocole de transmission radio de la consommation électrique.       
+```teleinfo->getAdcoAsLong()``` | Donne l'*Adresse du compteur* sous la forme d'un entier long positif. Elimine les zéros non signifcatifs.    
 
 ## Code
 ### Arborescence
