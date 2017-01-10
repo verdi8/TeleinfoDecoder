@@ -238,7 +238,7 @@ public:
 	}
 
 	/**
-	 * Test de la méthode getTotalIndex() avec des valeurs maximales
+	 * Test de la méthode getAdcoAsLong()
 	 */
 	void testGetAdcoAsLong() {
 		TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder;
@@ -279,6 +279,9 @@ public:
 		CPPUNIT_ASSERT(teleinfo->getAdcoAsLong() == 0);
 	}
 
+	/**
+	 * Test de la méthode getAdcoChecksum8()
+	 */
 	void testGetAdcoChecksum8() {
 		TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder;
 		Teleinfo* teleinfo;
@@ -303,9 +306,8 @@ public:
 		teleinfo = injectEndText(teleinfoDecoder);
 
 		CPPUNIT_ASSERT(teleinfo->getAdcoChecksum8() == 0x30);
-
-
 	}
+
 
 	/**
 	 * Test des constantes
@@ -418,8 +420,11 @@ private:
 	CPPUNIT_TEST(testGetInstPower);
 	CPPUNIT_TEST(testGetTotalIndex);
 	CPPUNIT_TEST(testGetTotalIndexMax);
+<<<<<<< HEAD
 	CPPUNIT_TEST(testGetAdcoAsLong);
 	CPPUNIT_TEST(testGetAdcoChecksum8);
+=======
+>>>>>>> 86e6ddce55c9f092414bb4779b190e1ef4e608c2
 	CPPUNIT_TEST(testConstantes);
 	CPPUNIT_TEST_SUITE_END();
 
