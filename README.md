@@ -51,7 +51,7 @@ Les méthodes simplifiées de consultation sont :
 Méthode | Unité | Type | Description
 ------- | ----- | ---- | -----------
 `teleinfo->getAdco()` | | `char*` | Donne le numéro de série du compteur
-`teleinfo->getTotalIndex()` | Wh | `unsigned long` | Donne la consommation totale du compteur quelque soit l'option tarifaire (base, heures pleines/creuses, EJP, etc.). Il s'agit de la somme des valeurs *BASE*, *HCHC*, *HCHP*, *EJPHN*, *EJPHPM*, *BBRHCJB*, *BBRHPJB*, *BBRHCJW*, *BBRHPJW*, *BBRHCJR* et *BBRHPJR*, à laquelle est soustrait [un *offset* optionnel]. A diviser par 1000 pour obtenir des kWh plus usuels.
+`teleinfo->getTotalIndex()` | Wh | `unsigned long` | Donne la consommation totale du compteur quelque soit l'option tarifaire (base, heures pleines/creuses, EJP, etc.). Il s'agit de la somme des valeurs *BASE*, *HCHC*, *HCHP*, *EJPHN*, *EJPHPM*, *BBRHCJB*, *BBRHPJB*, *BBRHCJW*, *BBRHPJW*, *BBRHCJR* et *BBRHPJR*, à laquelle est soustrait [un *offset* optionnel](#offset-de-lindex-total). A diviser par 1000 pour obtenir des kWh plus usuels.
 `teleinfo->getInstPower()` | W | `int` | Donne la puissance instantanée. Celle-ci correspond à la valeur de *PAPP* (puissance apparente). Cette dernière n'étant pas toujours présente, la puissance est alors calculée avec 230 (V) * IINST (intensité instantanée). Si IINST n'est pas disponible non plus, retourne 0.
 
 Pour la consultation des autres informations de Téléinfo, voir [Usage avancé] (#usage-avancé).
@@ -163,14 +163,14 @@ Méthode | Description
 `teleinfo->getAdcoAsLong()` | Donne l'*Adresse du compteur* sous la forme d'un entier long positif. Elimine les zéros non signifcatifs.    
 
 ### Offset de l'index total
-Le décodeur permet d'appliquer un *offset* à l'index total. L'*offset* est pris en compte dans `getTotalIndex()` mais pas dans les méthodes de consultation des groupes Téléinfo comme `getBase()`, `getHchc()`, etc..
-L'*offset* est de type `unsigned long`, il peut être défini à la création du décodeur, par exemple avec un *offset* de 10000Wh :
+Le décodeur permet d'appliquer un *offset* à l'index total. L'*offset* est pris en compte dans `teleinfo->getTotalIndex()` mais pas dans les méthodes de consultation des groupes Téléinfo comme `teleinfo->getBase()`, `teleinfo->getHchc()`, etc..
+L'*offset* est de type `unsigned long`, il est défini à la création du décodeur. Exemple avec un *offset* de 10000Wh :
 ```C
 TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder(10000);
 ```
-Suite à cette initialisation, pour un compteur avec un index à 550000 Wh, `getTotalIndex()` retournera une valeur de 540000Wh (550000Wh - 10000Wh d'*offset*).
+Suite à cette initialisation, pour un compteur avec un index à 550000 Wh, `teleinfo->getTotalIndex()` retournera une valeur de 540000Wh (550000Wh - 10000Wh d'*offset*).
 
-L'*offset* appliqué peut être consulté sur l'objet de type *Teleinfo* obtenu après décodage ```teleinfo->getTotalOffset()```.
+L'*offset* appliqué peut être consulté sur l'objet de type *Teleinfo* obtenu après décodage `teleinfo->getTotalOffset()`.
 
 
 #### Offset par défaut
@@ -178,15 +178,17 @@ Par défaut, le décodeur n'applique pas d'*offset*, les 3 initialisations suiva
 ```
 TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder();
 ```
+ou
 ```
 TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder(TELEINFO_TOTAL_OFFSET_NONE);
 ```
+ou
 ```
 TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder(0);
 ```
 
 #### Offset automatique
-Un cas particulier d'offset, est l'*offset automatique* (constante TELEINFO_TOTAL_OFFSET_AUTO), qui peut être défini à la création du décodeur par :
+Un cas particulier d'offset, est l'*offset automatique* (constante `TELEINFO_TOTAL_OFFSET_AUTO`), qui peut être défini à la création du décodeur par :
 ```C
 TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder(TELEINFO_TOTAL_OFFSET_AUTO);
 ```
@@ -198,26 +200,26 @@ Exemple :
 ```C
 TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder(TELEINFO_TOTAL_OFFSET_AUTO);
 ```
-2. Décodage `decode(character)` jusque fin de la première trame. Le compteur a un index de 550000Wh.
-    - `getTotalIndex()` retourne 0Wh
-    - `getTotalOffset()` retourne 550000Wh
-3. Décodage `decode(character)` jusque fin d'un trae suivante. Le compteur a un index de 553000Wh.
-    - `getTotalIndex()` retourne 3000Wh
-    - `getTotalOffset()` retourne 550000Wh
+2. Décodage `teleinfo = decode(character)` jusque fin de la première trame. Le compteur a un index de 550000Wh.
+    - `teleinfo->getTotalIndex()` retourne 0Wh
+    - `teleinfo->getTotalOffset()` retourne 550000Wh
+3. Décodage `teleinfo = decode(character)` jusque fin d'une trame suivante. Le compteur a un index de 553000Wh.
+    - `teleinfo->getTotalIndex()` retourne 3000Wh
+    - `teleinfo->getTotalOffset()` retourne 550000Wh
 
 
 `getTotalIndex()` commence donc à 0Wh
-`getTotalOffset()` prend la valeur de l'index à la création de 
+`getTotalOffset()` prend la valeur de l'index après la première trame reçue
 
 #### Exemple d'utilisation de l'offset
 L'*offset* permet de créer une sonde Téléinfo qui commence son comptage à 0Wh, en stockant ensuite l'*offset* dans une mémoire du type EEPROM :
 1. Première utilisation :
 	- pas d'*offset* stocké en EEPROM : création du *TeleinfoDecoder* avec un *offset* automatique `TELEINFO_TOTAL_OFFSET_AUTO`
-	- après réception de la première trame, consultation de l'*offset* `getTotalOffset()` et stockage en EEPROM
-	- le comptage avec `getTotalIndex()` commence à 0Wh
+	- après réception de la première trame, consultation de l'*offset* `teleinfo->getTotalOffset()` et stockage en EEPROM
+	- le comptage avec `teleinfo->getTotalIndex()` commence à 0Wh
 2. Utilisations suivantes de la sonde (après avoir été débranchée par exemple) :
 	- *offset* trouvé en EEPROM : création du *TeleinfoDecoder* avec un *offset* automatique `TELEINFO_TOTAL_OFFSET_AUTO`
-	- le comptage avec `getTotalIndex()` continue où il en était
+	- le comptage avec `teleinfo->getTotalIndex()` continue où il en était
 
 L'*offset* peut donc être utile dans le cas où le protocole de transmission de la sonde ne supporte pas de très grandes valeurs d'index. Cce qui est le cas du protcole *RfxPower/RfxMeter*, par exemple.
 
