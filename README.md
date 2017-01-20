@@ -18,7 +18,7 @@ Le décodeur ne lit ni n'écrit d'entrées/sorties, de pins, de port série, de 
 **Robustesse.** Le décodeur est basé sur le [Design Pattern État (State)](https://fr.wikipedia.org/wiki/%C3%89tat_%28patron_de_conception%29), ce qui le rend structurellement très robuste. 
 Toute donnée non attendue le ramène à son état initial en attente du début d'une nouvelle trame Téléinfo. 
 Il est donc tolérant aux trames erronées, interruptions de trames, trames prises en cours...
-De plus, la bibliothèque comporte des tests unitaires *CPPUnit* qui assurent sa **stabilité** dans le temps et permettent d'éprouver sa robustesse en reproduisant des cas critiques (interruption, erreurs de trames, etc.). [en cours de développement]   
+De plus, la bibliothèque comporte des tests unitaires [CPPUnit](https://sourceforge.net/projects/cppunit/) qui assurent sa **stabilité** dans le temps et permettent d'éprouver sa robustesse en reproduisant des cas critiques (interruption, erreurs de trames, etc.).   
 
 **Empreinte mémoire.** Pour une intégration en système embarqué, le décodeur gère sa mémoire *en bon père de famille* : une fois le décodeur initialisé (```new TeleinfoDecoder()```), son empreinte mémoire reste constante, aucune allocaton/désallocation dynamique n'est effectuée donc aucun risque de fragmentation de la mémoire.
 *Attention.* l'objet de type *Teleinfo* retourné par le décodeur (voir plus bas) ne doit pas être désalloué (```free(...)```), il est réutilisé pour les décodages de trames suivantes.  
@@ -41,24 +41,24 @@ Teleinfo* teleinfo = teleinfoDecoder->decode(character);
 La méthode ```decode(int character)``` a 2 résultats possibles :
 
 * **NULL** : aucune donnée de Téléinfo n'est disponible pour le moment; la trame en cours n'est pas terminée
-* **un objet de signature *Teleinfo* **: la trame Téléinfo est terminée, son contenu est disponible dans l'objet *Teleinfo* mis à disposition (voir ci-dessous)
+* **un objet de signature *Teleinfo***: la trame Téléinfo est terminée, son contenu est disponible dans l'objet *Teleinfo* mis à disposition (voir ci-dessous)
 
 ### Consultation
-Les informations de Téléinfo sont consultables sur l'objet de signature *Teleinfo* renvoyé par ```decode(int character)```.
+Les informations de Téléinfo sont consultables sur l'objet de signature *Teleinfo* renvoyé par `decode(int character)`.
 
 Les méthodes simplifiées de consultation sont :
 
 Méthode | Unité | Type | Description
 ------- | ----- | ---- | -----------
-```teleinfo->getAdco()``` | | ```char*``` | Donne le numéro de série du compteur
-```teleinfo->getTotalIndex()``` | Wh | ```unsigned long``` | Donne la consommation totale du compteur quelque soit l'option tarifaire (base, heures pleines/creuses, EJP, etc.). Il s'agit de la somme des valeurs *BASE*, *HCHC*, *HCHP*, *EJPHN*, *EJPHPM*, *BBRHCJB*, *BBRHPJB*, *BBRHCJW*, *BBRHPJW*, *BBRHCJR* et *BBRHPJR*. A diviser par 1000 pour obtenir des kWh plus usuels.
-```teleinfo->getInstPower()``` | W | ```int``` | Donne la puissance instantanée. Celle-ci correspond à la valeur de *PAPP* (puissance apparente). Cette dernière n'étant pas toujours présente, la puissance est alors calculée avec 230 (V) * IINST (intensité instantanée). Si IINST n'est pas disponible non plus, retourne 0.
+`teleinfo->getAdco()` | | `char*` | Donne le numéro de série du compteur
+`teleinfo->getTotalIndex()` | Wh | `unsigned long` | Donne la consommation totale du compteur quelque soit l'option tarifaire (base, heures pleines/creuses, EJP, etc.). Il s'agit de la somme des valeurs *BASE*, *HCHC*, *HCHP*, *EJPHN*, *EJPHPM*, *BBRHCJB*, *BBRHPJB*, *BBRHCJW*, *BBRHPJW*, *BBRHCJR* et *BBRHPJR*, à laquelle est soustrait [un *offset* optionnel]. A diviser par 1000 pour obtenir des kWh plus usuels.
+`teleinfo->getInstPower()` | W | `int` | Donne la puissance instantanée. Celle-ci correspond à la valeur de *PAPP* (puissance apparente). Cette dernière n'étant pas toujours présente, la puissance est alors calculée avec 230 (V) * IINST (intensité instantanée). Si IINST n'est pas disponible non plus, retourne 0.
 
 Pour la consultation des autres informations de Téléinfo, voir [Usage avancé] (#usage-avancé).
 
 ### Constantes
 
-La bibliothèque met à disposition une constante utilitaire ```TELEINFO_BAUD_RATE``` qui correspond au débit du flux Téléinfo (1200 baud).
+La bibliothèque met à disposition une constante utilitaire `TELEINFO_BAUD_RATE` qui correspond au débit du flux Téléinfo (1200 baud).
 Celle-ci n'est pas utilisée dans le décodeur mais peut être utilisée pour paramétrer un port série de lecture du flux.
 
 ### Divers
@@ -66,7 +66,7 @@ Afin d'alléger le code d'intégration le TeleinfoDecoder applique 2 filtres :
 * il ignore les caractères de valeur -1 (qui peut être renvoyé par une lecture de port série sans octet disponible, par exemple)
 * les caractères du flux Téléinfo sont codés sur 7 bits + 1 bit de parité, ce dernier est ignoré par un ET logique 7Fh   
 
-Bref, du code en moins à écrire avant d'appeler ```decode(int character)```.
+Bref, du code en moins à écrire avant d'appeler `decode(int character)`.
 
 # Exemples 
 ## En environnement Arduino
@@ -128,38 +128,98 @@ void loop() {
 ```
 
 ## Usage avancé
-### Consultation standard
+### Consultation des informations Téléinfo
 Méthode | Etiquette Téléinfo | Description | Unité | Type
 ------- | ------------------ | ----------- | ----- | ----
-```teleinfo->getAdco()``` | ADCO | Donne l'*Adresse du compteur* | | ```char*```
-```teleinfo->getOptarif()``` | OPTARIF | Donne l'*Option tarifaire choisie* | | ```char*```
-```teleinfo->getIsousc()``` | ISOUSC | Donne l'*Intensité souscrite* | A | ```int```
-```teleinfo->getBase()``` | BASE | Option BASE : donne l'*Index option base* | Wh | ```unsigned long```
-```teleinfo->getHchc()``` | HCHC | Heures Creuses : donne l'*Index option heures creuses* | Wh | ```unsigned long```
-```teleinfo->getHchc()``` | HCHP | Heures Creuses : donne l'*Index option heures pleines* | Wh | ```unsigned long```
-```teleinfo->getEjphn()``` | EJPHN | Option EJP : donne l'*Index heures normales* | Wh | ```unsigned long```
-```teleinfo->getEjphpm()``` | EJPHPM | Option EJP : donne l'*Index heures de pointe mobile* | Wh | ```unsigned long```
-```teleinfo->getBbrhcjb()``` | BBRHCJB | Option TEMPO : donne l'*Index heures creuses jours bleus* | Wh | ```unsigned long```
-```teleinfo->getBbrhpjb()``` | BBRHPJB | Option TEMPO : donne l'*Index heures pleines jours bleus* | Wh | ```unsigned long```
-```teleinfo->getBbrhcjw()``` | BBRHCJW | Option TEMPO : donne l'*Index heures creuses jours blancs* | Wh | ```unsigned long```
-```teleinfo->getBbrhpjw()``` | BBRHPJW | Option TEMPO : donne l'*Index heures pleines jours blancs* | Wh | ```unsigned long```
-```teleinfo->getBbrhcjr()``` | BBRHCJR | Option TEMPO : donne l'*Index heures creuses jours rouges* | Wh | ```unsigned long```
-```teleinfo->getBbrhpjr()``` | BBRHPJR | Option TEMPO : donne l'*Index heures pleines jours rouges* | Wh | ```unsigned long```
-```teleinfo->getPejp()``` | PEJP | Donne le *Préavis heures EJP* | min | ```int```
-```teleinfo->getPtec()``` | PTEC | Donne la *Période tarifaire en cours* |  | ```char*```
-```teleinfo->getDemain()``` | DEMAIN | Donne la *Couleur du lendemain* |  | ```char*```
-```teleinfo->getIinst()``` | IINST | Donne l'*Intensité instantanée* | A | ```int```
-```teleinfo->getAdps()``` | ADPS | Donne l'*Avertissement de dépassement de puissance souscrite* | A | ```int```
-```teleinfo->getImax()``` | IMAX | Donne l'*Intensité maximale appelée* | A | ```int```
-```teleinfo->getPapp()``` | PAPP | Donne la *Puissance apparente* | W | ```int```
-```teleinfo->getHhphc()``` | HHPHC | donne l'*Horaire heure creuse heure pleine* |  | ```char```
-```teleinfo->getMotdetat()``` | MOTDETAT | donne le *Mot d'état du compteur* |  | ```char*```
+`teleinfo->getAdco()` | ADCO | Donne l'*Adresse du compteur* | | `char*`
+`teleinfo->getOptarif()` | OPTARIF | Donne l'*Option tarifaire choisie* | | `char*`
+`teleinfo->getIsousc()` | ISOUSC | Donne l'*Intensité souscrite* | A | `int`
+`teleinfo->getBase()` | BASE | Option BASE : donne l'*Index option base* | Wh | `unsigned long`
+`teleinfo->getHchc()` | HCHC | Heures Creuses : donne l'*Index option heures creuses* | Wh | `unsigned long`
+`teleinfo->getHchc()` | HCHP | Heures Creuses : donne l'*Index option heures pleines* | Wh | `unsigned long`
+`teleinfo->getEjphn()` | EJPHN | Option EJP : donne l'*Index heures normales* | Wh | `unsigned long`
+`teleinfo->getEjphpm()` | EJPHPM | Option EJP : donne l'*Index heures de pointe mobile* | Wh | `unsigned long`
+`teleinfo->getBbrhcjb()` | BBRHCJB | Option TEMPO : donne l'*Index heures creuses jours bleus* | Wh | `unsigned long`
+`teleinfo->getBbrhpjb()` | BBRHPJB | Option TEMPO : donne l'*Index heures pleines jours bleus* | Wh | `unsigned long`
+`teleinfo->getBbrhcjw()` | BBRHCJW | Option TEMPO : donne l'*Index heures creuses jours blancs* | Wh | `unsigned long`
+`teleinfo->getBbrhpjw()` | BBRHPJW | Option TEMPO : donne l'*Index heures pleines jours blancs* | Wh | `unsigned long`
+`teleinfo->getBbrhcjr()` | BBRHCJR | Option TEMPO : donne l'*Index heures creuses jours rouges* | Wh | `unsigned long`
+`teleinfo->getBbrhpjr()` | BBRHPJR | Option TEMPO : donne l'*Index heures pleines jours rouges* | Wh | `unsigned long`
+`teleinfo->getPejp()` | PEJP | Donne le *Préavis heures EJP* | min | `int`
+`teleinfo->getPtec()` | PTEC | Donne la *Période tarifaire en cours* |  | `char*`
+`teleinfo->getDemain()` | DEMAIN | Donne la *Couleur du lendemain* |  | `char*`
+`teleinfo->getIinst()` | IINST | Donne l'*Intensité instantanée* | A | `int`
+`teleinfo->getAdps()` | ADPS | Donne l'*Avertissement de dépassement de puissance souscrite* | A | `int`
+`teleinfo->getImax()` | IMAX | Donne l'*Intensité maximale appelée* | A | `int`
+`teleinfo->getPapp()` | PAPP | Donne la *Puissance apparente* | W | `int`
+`teleinfo->getHhphc()` | HHPHC | donne l'*Horaire heure creuse heure pleine* |  | `char`
+`teleinfo->getMotdetat()` | MOTDETAT | donne le *Mot d'état du compteur* |  | `char*`
 
-### Consultation spéciale
+### Facilités de consultation de l'adresse du compteur
 Méthode | Description
 ------- | -----------
-```teleinfo->getAdcoChecksum8()``` | Calcule un checksum modulo 256 de l*'Adresse du compteur*. Peut constituer une adresse sur 8 bits du compteur. Par exemple, cette valeur peut servir d'identifiant de sonde dans un protocole de transmission radio de la consommation électrique.       
-```teleinfo->getAdcoAsLong()``` | Donne l'*Adresse du compteur* sous la forme d'un entier long positif. Elimine les zéros non signifcatifs.    
+`teleinfo->getAdco()` | Donne l'*Adresse du compteur* telle que transmise par le protocole Teleinfo, donc complété par des zéros à gauche 
+`teleinfo->getAdcoChecksum8()` | Calcule un checksum modulo 256 de l*'Adresse du compteur*. Peut constituer une adresse sur 8 bits du compteur. Par exemple, cette valeur peut servir d'identifiant de sonde dans un protocole de transmission radio de la consommation électrique.       
+`teleinfo->getAdcoAsLong()` | Donne l'*Adresse du compteur* sous la forme d'un entier long positif. Elimine les zéros non signifcatifs.    
+
+### Offset de l'index total
+Le décodeur permet d'appliquer un *offset* à l'index total. L'*offset* est pris en compte dans `getTotalIndex()` mais pas dans les méthodes de consultation des groupes Téléinfo comme `getBase()`, `getHchc()`, etc..
+L'*offset* est de type `unsigned long`, il peut être défini à la création du décodeur, par exemple avec un *offset* de 10000Wh :
+```C
+TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder(10000);
+```
+Suite à cette initialisation, pour un compteur avec un index à 550000 Wh, `getTotalIndex()` retournera une valeur de 540000Wh (550000Wh - 10000Wh d'*offset*).
+
+L'*offset* appliqué peut être consulté sur l'objet de type *Teleinfo* obtenu après décodage ```teleinfo->getTotalOffset()```.
+
+
+#### Offset par défaut
+Par défaut, le décodeur n'applique pas d'*offset*, les 3 initialisations suivantes sont équivalentes :
+```
+TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder();
+```
+```
+TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder(TELEINFO_TOTAL_OFFSET_NONE);
+```
+```
+TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder(0);
+```
+
+#### Offset automatique
+Un cas particulier d'offset, est l'*offset automatique* (constante TELEINFO_TOTAL_OFFSET_AUTO), qui peut être défini à la création du décodeur par :
+```C
+TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder(TELEINFO_TOTAL_OFFSET_AUTO);
+```
+
+L'*offset* prend alors la valeur de l'index obtenu dans la première trame Téléinfo. L'*index total* commence donc à zéro à la création du décodeur.
+
+Exemple :
+1. Création du décodeur
+```C
+TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder(TELEINFO_TOTAL_OFFSET_AUTO);
+```
+2. Décodage `decode(character)` jusque fin de la première trame. Le compteur a un index de 550000Wh.
+    - `getTotalIndex()` retourne 0Wh
+    - `getTotalOffset()` retourne 550000Wh
+3. Décodage `decode(character)` jusque fin d'un trae suivante. Le compteur a un index de 553000Wh.
+    - `getTotalIndex()` retourne 3000Wh
+    - `getTotalOffset()` retourne 550000Wh
+
+
+`getTotalIndex()` commence donc à 0Wh
+`getTotalOffset()` prend la valeur de l'index à la création de 
+
+#### Exemple d'utilisation de l'offset
+L'*offset* permet de créer une sonde Téléinfo qui commence son comptage à 0Wh, en stockant ensuite l'*offset* dans une mémoire du type EEPROM :
+1. Première utilisation :
+	- pas d'*offset* stocké en EEPROM : création du *TeleinfoDecoder* avec un *offset* automatique `TELEINFO_TOTAL_OFFSET_AUTO`
+	- après réception de la première trame, consultation de l'*offset* `getTotalOffset()` et stockage en EEPROM
+	- le comptage avec `getTotalIndex()` commence à 0Wh
+2. Utilisations suivantes de la sonde (après avoir été débranchée par exemple) :
+	- *offset* trouvé en EEPROM : création du *TeleinfoDecoder* avec un *offset* automatique `TELEINFO_TOTAL_OFFSET_AUTO`
+	- le comptage avec `getTotalIndex()` continue où il en était
+
+L'*offset* peut donc être utile dans le cas où le protocole de transmission de la sonde ne supporte pas de très grandes valeurs d'index. Cce qui est le cas du protcole *RfxPower/RfxMeter*, par exemple.
 
 ## Code
 ### Arborescence

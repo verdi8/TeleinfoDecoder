@@ -12,6 +12,18 @@
 #define TELEINFO_BAUD_RATE   1200
 
 /**
+ * Une valeur spécifique d'offset de l'index total afin que celui commence à 0
+ * C'est-à-dire que l'offset est initialisé à la valeur de la première valorisation
+ * de l'index total.
+ */
+#define TELEINFO_TOTAL_OFFSET_AUTO   -1
+
+/**
+ * Une valeur spécifique d'offset de l'index total : pas d'offset
+ */
+#define TELEINFO_TOTAL_OFFSET_NONE    0
+
+/**
  * Cette interface donne accès aux données du compteur qui ont été lues par le protocole Téléinfo
  */
 class Teleinfo {
@@ -139,6 +151,11 @@ class Teleinfo {
     virtual unsigned long getTotalIndex()=0;
 
     /**
+     * Donne l'offset appliqué à l'index total
+     */
+    virtual unsigned long getTotalOffset()=0;
+
+    /**
      * Donne la puissance instantanée (W)
      * @return la valeur de PAPP (Puissance apparente) si disponible, sinon la valeur de IINST x 230V si disponible, 0 sinon
      */
@@ -171,10 +188,9 @@ class TeleinfoDecoder {
   public:
     /**
      * Création du décodeur Téléinfo.
-     * 
-     * @param inputPin le numéro de pin d'entrée du flux Téléinfo
+     * @param totalOffset un offset total facultatif
      */
-    TeleinfoDecoder();
+    TeleinfoDecoder(unsigned long totalOffset = TELEINFO_TOTAL_OFFSET_NONE);
 
     /**
      * Décode un caractère du flux Téléinfo

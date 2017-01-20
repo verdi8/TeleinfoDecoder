@@ -21,7 +21,7 @@ public:
 	 * Test avec tous les groupes valorisés (même si c'est un cas irréel)
 	 */
 	void testTrameComplete() {
-		TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder;
+		TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder();
 		CPPUNIT_ASSERT(injectStartText(teleinfoDecoder) == NULL);
 		CPPUNIT_ASSERT(injectGroupe(teleinfoDecoder, "ADCO", "026489026467") == NULL);
 		CPPUNIT_ASSERT(injectGroupe(teleinfoDecoder, "OPTARIF", "BASE") == NULL);
@@ -78,7 +78,7 @@ public:
 	 * Test avec une toute petite trame (adresse du compteur seul, même si c'est irréel)
 	 */
 	void testTrameMinimaliste() {
-		TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder;
+		TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder();
 		CPPUNIT_ASSERT(injectStartText(teleinfoDecoder) == NULL);
 		CPPUNIT_ASSERT(injectGroupe(teleinfoDecoder, "ADCO", "026489026467") == NULL);
 		Teleinfo* teleinfo = injectEndText(teleinfoDecoder);
@@ -112,7 +112,7 @@ public:
 	 * Test d'une trame interrompue et reprise au début
 	 */
 	void testTrameInterrompueEot() {
-		TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder;
+		TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder();
 		CPPUNIT_ASSERT(injectStartText(teleinfoDecoder) == NULL);
 		CPPUNIT_ASSERT(injectGroupe(teleinfoDecoder, "ADCO", "026489026467") == NULL);
 		CPPUNIT_ASSERT(injectGroupe(teleinfoDecoder, "OPTARIF", "BASE") == NULL);
@@ -140,7 +140,7 @@ public:
 	 * Test d'une trame avec un groupe avec un mauvais checksum
 	 */
 	void testTrameBadChecksum() {
-		TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder;
+		TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder();
 
 		// Trame avec un mauvais checksum
 		CPPUNIT_ASSERT(injectStartText(teleinfoDecoder) == NULL);
@@ -166,7 +166,7 @@ public:
 	 * Test du calcul particulier de getInstPower()
 	 */
 	void testGetInstPower() {
-		TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder;
+		TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder();
 
 		// Pas de puissance tranmise
 		injectStartText(teleinfoDecoder);
@@ -195,7 +195,7 @@ public:
 	 * Test de la méthode getTotalIndex()
 	 */
 	void testGetTotalIndex() {
-		TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder;
+		TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder();
 		injectStartText(teleinfoDecoder);
 		injectGroupe(teleinfoDecoder, "ADCO", "026489026467");
 		injectGroupe(teleinfoDecoder, "BASE", "006789543");
@@ -218,7 +218,7 @@ public:
 	 * Test de la méthode getTotalIndex() avec des valeurs maximales
 	 */
 	void testGetTotalIndexMax() {
-		TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder;
+		TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder();
 		injectStartText(teleinfoDecoder);
 		injectGroupe(teleinfoDecoder, "ADCO", "026489026467");
 		injectGroupe(teleinfoDecoder, "BASE", "999999999");
@@ -241,7 +241,7 @@ public:
 	 * Test de la méthode getAdcoAsLong()
 	 */
 	void testGetAdcoAsLong() {
-		TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder;
+		TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder();
 		Teleinfo* teleinfo;
 
 		injectStartText(teleinfoDecoder);
@@ -283,7 +283,7 @@ public:
 	 * Test de la méthode getAdcoChecksum8()
 	 */
 	void testGetAdcoChecksum8() {
-		TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder;
+		TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder();
 		Teleinfo* teleinfo;
 
 		injectStartText(teleinfoDecoder);
@@ -308,6 +308,61 @@ public:
 		CPPUNIT_ASSERT(teleinfo->getAdcoChecksum8() == 0x30);
 	}
 
+	/**
+	 * Test de l'offset standard
+	 */
+	void testTotalOffset() {
+		TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder(2300);
+		Teleinfo* teleinfo;
+
+		injectStartText(teleinfoDecoder);
+		injectGroupe(teleinfoDecoder, "ADCO", "026489026467");
+		injectGroupe(teleinfoDecoder, "BASE", "000056990");
+		teleinfo = injectEndText(teleinfoDecoder);
+
+		CPPUNIT_ASSERT(teleinfo->getTotalIndex() == 54690);
+		CPPUNIT_ASSERT(teleinfo->getTotalOffset() == 2300);
+	}
+
+	/**
+	 * Test de l'offset automatique
+	 */
+	void testTotalOffsetAuto() {
+		TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder(TELEINFO_TOTAL_OFFSET_AUTO);
+		Teleinfo* teleinfo;
+
+		injectStartText(teleinfoDecoder);
+		injectGroupe(teleinfoDecoder, "ADCO", "026489026467");
+		injectGroupe(teleinfoDecoder, "BASE", "000056990");
+		teleinfo = injectEndText(teleinfoDecoder);
+
+		CPPUNIT_ASSERT(teleinfo->getTotalIndex() == 0);
+		CPPUNIT_ASSERT(teleinfo->getTotalOffset() == 56990);
+
+		injectStartText(teleinfoDecoder);
+		injectGroupe(teleinfoDecoder, "ADCO", "026489026467");
+		injectGroupe(teleinfoDecoder, "BASE", "000059000");
+		teleinfo = injectEndText(teleinfoDecoder);
+
+		CPPUNIT_ASSERT(teleinfo->getTotalIndex() == 2010);
+		CPPUNIT_ASSERT(teleinfo->getTotalOffset() == 56990);
+	}
+
+	/**
+	 * Test de l'offset par défaut
+	 */
+	void testTotalOffsetDefault() {
+		TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder(TELEINFO_TOTAL_OFFSET_NONE);
+		Teleinfo* teleinfo;
+
+		injectStartText(teleinfoDecoder);
+		injectGroupe(teleinfoDecoder, "ADCO", "026489026467");
+		injectGroupe(teleinfoDecoder, "BASE", "000056990");
+		teleinfo = injectEndText(teleinfoDecoder);
+
+		CPPUNIT_ASSERT(teleinfo->getTotalIndex() == 56990);
+		CPPUNIT_ASSERT(teleinfo->getTotalOffset() == 0);
+	}
 
 	/**
 	 * Test des constantes
@@ -422,6 +477,9 @@ private:
 	CPPUNIT_TEST(testGetTotalIndexMax);
 	CPPUNIT_TEST(testGetAdcoAsLong);
 	CPPUNIT_TEST(testGetAdcoChecksum8);
+	CPPUNIT_TEST(testTotalOffset);
+	CPPUNIT_TEST(testTotalOffsetAuto);
+	CPPUNIT_TEST(testTotalOffsetDefault);
 	CPPUNIT_TEST(testConstantes);
 	CPPUNIT_TEST_SUITE_END();
 

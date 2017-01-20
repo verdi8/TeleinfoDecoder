@@ -130,6 +130,10 @@ public:
  */
 class TeleinfoImpl : public Teleinfo {
 private :
+
+	unsigned long totalOffset;
+
+
 	// Toutes les données du compteur
 	// Voir : http://www.worldofgz.com/electronique/recuperer-la-teleinformation-erdf-sur-larduino/
 	char adco[12 + 1]; // Adresse du compteur (+1 octet pour une null-terminated-string)
@@ -167,6 +171,10 @@ private :
 	char motdetat[6 + 1]; // Mot d'état du compteur (+1 octet pour une null-terminated-string)
 
 public:
+
+	TeleinfoImpl(unsigned long totalOffset) {
+		this->totalOffset = totalOffset;
+	}
 
 	// Méthodes de l'interface -------------------------------------------------------------------------------------------------
 
@@ -255,7 +263,11 @@ public:
 	// Méthodes pratiques ------------------------------------------------------------------------------------------------------
 
 	unsigned long getTotalIndex() {
-		return base + hchc + hchp + ejphn + ejphpm + bbrhcjb + bbrhpjb + bbrhcjw + bbrhpjw + bbrhcjr + bbrhpjr;
+		return (base + hchc + hchp + ejphn + ejphpm + bbrhcjb + bbrhpjb + bbrhcjw + bbrhpjw + bbrhcjr + bbrhpjr) - totalOffset;
+	}
+
+	unsigned long getTotalOffset() {
+		return totalOffset;
 	}
 
 	int getInstPower() {
@@ -272,6 +284,10 @@ public:
 
 	// Divers ------------------------------------------------------------------------------------------------------------------
 
+	/**
+	 * Remet à zéro les groupes d'informations.
+	 * Ne remete pas à zéro l'offest total car celui-ci est constant une fois qu'il a été initialisé
+	 */
 	void reset() {
 		memset(adco, '\0', sizeof(adco));
 		memset(optarif, '\0', sizeof(optarif));
@@ -299,7 +315,17 @@ public:
 	}
 
 	/**
-	 *  Trasfert les données d'un groupe dans la structire totale Téléinfo
+	 * Recalcule l'offset total
+	 */
+	void computeTotalOffset() {
+		if(totalOffset == TELEINFO_TOTAL_OFFSET_AUTO) {
+			totalOffset = 0; // Pour ne pas perturber le calcul d el'index total
+			totalOffset = getTotalIndex();
+		}
+	}
+
+	/**
+	 *  Trasfert les données d'un groupe dans la structure totale Teleinfo
 	 */
 	void store(TeleinfoGroupe* teleinfoGroupe) {
 		char* etiquette = teleinfoGroupe->getEtiquette();
@@ -574,7 +600,8 @@ public:
 	StateInterface* lf() {
 		return stateRegistry->getWaitingStartGroupeState()->lf(); // Début d'une nouvelle ligne, on fait suivre à WaitingStartGroupeState
 	}
-	StateInterface* etx() {
+	StateInterface* etx() { // C'est ici que la trame Téléinfo se termine !
+		teleinfoImpl->computeTotalOffset();
 		return stateRegistry->getTerminatedState();
 	}
 	const char* getName() {
@@ -645,16 +672,16 @@ private:
 	StateInterface* currentState;
 
 public:
+
 	/**
-	 * Init
+	 * Constructeur paramétré
 	 */
-	TeleinfoDecoderImpl() {
+	TeleinfoDecoderImpl(unsigned long totalOffset = TELEINFO_TOTAL_OFFSET_NONE) {
 		teleinfoGroupe = new TeleinfoGroupe();
-		teleinfoImpl = new TeleinfoImpl();
+		teleinfoImpl = new TeleinfoImpl(totalOffset);
 		stateRegistry = new StateRegistry(teleinfoGroupe, teleinfoImpl);
 		reset();
 	}
-
 
 	/**
 	 * Décodage d'un caractère flux Téléinfo
@@ -712,11 +739,11 @@ public:
 		}
 };
 
-/*
-   TeleinfoDecoder : redirection -> TeleinfoDecoder::TeleinfoDecoderImpl
+/**
+ * TeleinfoDecoder : redirection -> TeleinfoDecoder::TeleinfoDecoderImpl
  */
-TeleinfoDecoder::TeleinfoDecoder() {
-	pimpl_ = new TeleinfoDecoderImpl();
+TeleinfoDecoder::TeleinfoDecoder(unsigned long totalOffset) {
+	pimpl_ = new TeleinfoDecoderImpl(totalOffset);
 }
 Teleinfo* TeleinfoDecoder::decode(int character) {
 	return pimpl_->decode(character);
