@@ -170,7 +170,7 @@ TeleinfoDecoder* teleinfoDecoder = new TeleinfoDecoder(10000);
 ```
 Suite à cette initialisation, pour un compteur avec un index à 550000 Wh, `teleinfo->getTotalIndex()` retournera une valeur de 540000Wh (550000Wh - 10000Wh d'*offset*).
 
-L'*offset* appliqué peut être consulté sur l'objet de type *Teleinfo* obtenu après décodage `teleinfo->getTotalOffset()`.
+L'*offset* appliqué peut être consulté par `teleinfo->getTotalOffset()`.
 
 
 #### Offset par défaut
